@@ -92,7 +92,7 @@ public class MainController implements ActionListener {
 		btnDeleteFile.setActionCommand("btnDeleteFile");
 		btnConfirm = sender.getjButton4();
 		btnConfirm.addActionListener(this);
-		btnConfirm.setActionCommand("btnConfirm");
+		btnConfirm.setActionCommand("btnConfirmSender");
 		btnSend = sender.getjButton5();
 		btnSend.addActionListener(this);
 		btnSend.setActionCommand("btnSend");
@@ -164,6 +164,8 @@ public class MainController implements ActionListener {
 					+ "3. Confirm. If Success, Send code to Receiver. Cofirm on Receiver side.\n"
 					+ "4. Send. Then be Patient ! A Dialog will appear when it is finished !";
 			JOptionPane.showMessageDialog(lgView, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
+		} else if (command.equals("btnConfirmSender")) {
+			
 		}
 	}
 }
