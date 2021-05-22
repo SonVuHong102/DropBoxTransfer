@@ -20,7 +20,7 @@ import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
 
 public class Test1 {
-	private static final String ACCESS_TOKEN = "sl.AxO5K6NIGbuikSfbWh484KVeYD00dwU7HkYANeqANUHtUYyM9lNpOgATlFFQdr8AydwJOyY99LWCiKn9LlQ1GvLjknkL2aLV8FrM4TXUXwEtXoO0x57WgeD2wx_kPzFbxcqAK_z57Zw1";
+	private static final String ACCESS_TOKEN = "";
 
 	public static void main(String args[]) throws DbxApiException, DbxException, IOException {
 		DbxRequestConfig config = DbxRequestConfig.newBuilder("dropbox/java-tutorial").build();
