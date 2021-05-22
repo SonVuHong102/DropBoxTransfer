@@ -112,7 +112,6 @@ public class MainController implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if (command.equals("btnLogin")) {
-			txtToken.setText("sl.AxVCTSWb7_m6Oqk8AlC1E3gZqWG61llXN9y7wFFQYIDbNOz6KmWWtG8Q2OzbjrcDtsubRX3D3B-VH0hcCCun0Xi0PtXaGRFQOGKH1SL9nqX18k1-bFbmKV_xw5sLIToIKAKp09w67Etw");
 			String token = txtToken.getText();
 			DbxRequestConfig config = DbxRequestConfig.newBuilder("sthidk").build();
 			DbxClientV2 client = new DbxClientV2(config, token);
