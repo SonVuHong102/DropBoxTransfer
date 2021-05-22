@@ -10,11 +10,21 @@ import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
 import view.LoginView;
 import view.RoleView;
+import view.SenderView;
 
 /**
  *
@@ -30,6 +40,14 @@ public class MainController implements ActionListener {
 	//Role
 	private RoleView roleView;
 	private JButton btnSender, btnReceiver;
+	// Sender
+	private SenderView sender;
+	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction;
+	private JTable tblFile;
+	private JTextField txtCode;
+	private int code;
+	private JFileChooser chooser;
+	private List<File> files;
 
 	public MainController() {
 
@@ -53,20 +71,49 @@ public class MainController implements ActionListener {
 		roleView = new RoleView();
 		btnSender = roleView.getjButton1();
 		btnReceiver = roleView.getjButton3();
-		
+
 		btnSender.addActionListener(this);
 		btnSender.setActionCommand("btnSender");
-		
+
 		btnReceiver.addActionListener(this);
 		btnReceiver.setActionCommand("btnReceiver");
+	}
+
+	private void initSender() {
+		sender = new SenderView();
+		btnRegenerate = sender.getjButton1();
+		btnRegenerate.addActionListener(this);
+		btnRegenerate.setActionCommand("btnRegenerate");
+		btnFileChooser = sender.getjButton2();
+		btnFileChooser.addActionListener(this);
+		btnFileChooser.setActionCommand("btnFileChooser");
+		btnDeleteFile = sender.getjButton3();
+		btnDeleteFile.addActionListener(this);
+		btnDeleteFile.setActionCommand("btnDeleteFile");
+		btnConfirm = sender.getjButton4();
+		btnConfirm.addActionListener(this);
+		btnConfirm.setActionCommand("btnConfirm");
+		btnSend = sender.getjButton5();
+		btnSend.addActionListener(this);
+		btnSend.setActionCommand("btnSend");
+		btnInstruction = sender.getjButton6();
+		btnInstruction.addActionListener(this);
+		btnInstruction.setActionCommand("btnInstruction");
+		tblFile = sender.getjTable1();
+		txtCode = sender.getjTextField1();
+		chooser = new JFileChooser();
+		chooser.setMultiSelectionEnabled(true);
+		files = new ArrayList<File>();
+		sender.setFocusable(true);
+
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if (command.equals("btnLogin")) {
+			txtToken.setText("sl.AxRrUKs8WAJSZZtBZJ_dQno8qFK8Lh4_NI2Gruk6DQ59dwflW4WmTa6jKSBhdupRWp5ToJ0dLwos_C9B8YxwJmFGLiXJ8v-4K8VyqGe-piPL5vlExP7JL2hjokUsgLMKj6fOEQngGNY_");
 			String token = txtToken.getText();
-
 			DbxRequestConfig config = DbxRequestConfig.newBuilder("sthidk").build();
 			DbxClientV2 client = new DbxClientV2(config, token);
 			try {
@@ -76,12 +123,40 @@ public class MainController implements ActionListener {
 			} catch (DbxException ex) {
 				JOptionPane.showMessageDialog(lgView, "Token is invalid ! ", "Error", JOptionPane.WARNING_MESSAGE);
 			}
-		}
-		else if (command.equals("btnSender")) {
+		} else if (command.equals("btnSender")) {
+			initSender();
+			sender.setVisible(true);
+			roleView.dispose();
+		} else if (command.equals("btnReceiver")) {
+
+		} else if (command.equals("btnRegenerate")) {
+			Random r = new Random();
+			code = Math.abs(r.nextInt()) % 1000;
+			txtCode.setText(code + "");
+		} else if (command.equals("btnFileChooser")) {
+			chooser.showOpenDialog(sender);
+			List<File>temp = Arrays.asList(chooser.getSelectedFiles());
+			for(File f : temp ) {
+				if(!files.contains(f)) {
+					files.add(f);
+				}
+			}
+			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
+			model.setRowCount(0);
+			int i = 0;
+			for (File f : files) {
+				model.addRow(sender.fileToObject(++i, f));
+			}
+		} else if(command.equals("btnDeleteFile")) {
+			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
+			int index = tblFile.getSelectedRow();
+			if(index==-1) {
+				JOptionPane.showMessageDialog(lgView, "List is Empty ! ", "Warning", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			model.removeRow(index);
+			files.remove(index);
 			
-		}
-		else if (command.equals("btnReceiver")) {
-		
 		}
 	}
 }
