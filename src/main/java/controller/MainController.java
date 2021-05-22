@@ -98,7 +98,7 @@ public class MainController implements ActionListener {
 		btnSend.setActionCommand("btnSend");
 		btnInstruction = sender.getjButton6();
 		btnInstruction.addActionListener(this);
-		btnInstruction.setActionCommand("btnInstruction");
+		btnInstruction.setActionCommand("btnInstructionSender");
 		tblFile = sender.getjTable1();
 		txtCode = sender.getjTextField1();
 		chooser = new JFileChooser();
@@ -112,7 +112,7 @@ public class MainController implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if (command.equals("btnLogin")) {
-			txtToken.setText("sl.AxRrUKs8WAJSZZtBZJ_dQno8qFK8Lh4_NI2Gruk6DQ59dwflW4WmTa6jKSBhdupRWp5ToJ0dLwos_C9B8YxwJmFGLiXJ8v-4K8VyqGe-piPL5vlExP7JL2hjokUsgLMKj6fOEQngGNY_");
+			txtToken.setText("sl.AxVCTSWb7_m6Oqk8AlC1E3gZqWG61llXN9y7wFFQYIDbNOz6KmWWtG8Q2OzbjrcDtsubRX3D3B-VH0hcCCun0Xi0PtXaGRFQOGKH1SL9nqX18k1-bFbmKV_xw5sLIToIKAKp09w67Etw");
 			String token = txtToken.getText();
 			DbxRequestConfig config = DbxRequestConfig.newBuilder("sthidk").build();
 			DbxClientV2 client = new DbxClientV2(config, token);
@@ -135,9 +135,9 @@ public class MainController implements ActionListener {
 			txtCode.setText(code + "");
 		} else if (command.equals("btnFileChooser")) {
 			chooser.showOpenDialog(sender);
-			List<File>temp = Arrays.asList(chooser.getSelectedFiles());
-			for(File f : temp ) {
-				if(!files.contains(f)) {
+			List<File> temp = Arrays.asList(chooser.getSelectedFiles());
+			for (File f : temp) {
+				if (!files.contains(f)) {
 					files.add(f);
 				}
 			}
@@ -147,16 +147,23 @@ public class MainController implements ActionListener {
 			for (File f : files) {
 				model.addRow(sender.fileToObject(++i, f));
 			}
-		} else if(command.equals("btnDeleteFile")) {
+		} else if (command.equals("btnDeleteFile")) {
 			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
 			int index = tblFile.getSelectedRow();
-			if(index==-1) {
+			if (index == -1) {
 				JOptionPane.showMessageDialog(lgView, "List is Empty ! ", "Warning", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
 			model.removeRow(index);
 			files.remove(index);
-			
+
+		} else if (command.equals("btnInstructionSender")) {
+			String instruction = 
+					"1. Generate a code to comunicate between Sender and Receiver.\n"
+					+ "2. Choose Files to Send.\n"
+					+ "3. Confirm. If Success, Send code to Receiver. Cofirm on Receiver side.\n"
+					+ "4. Send. Then be Patient ! A Dialog will appear when it is finished !";
+			JOptionPane.showMessageDialog(lgView, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 }
