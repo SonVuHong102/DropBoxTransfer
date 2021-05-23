@@ -15,6 +15,12 @@ import javax.swing.JTextField;
  * @author Admin
  */
 public class SenderView extends javax.swing.JFrame {
+	
+	private String instruction = "1. Click Regenerate. Send code to Receiver. Let Receiver connected.\n"
+					+ "2. Choose Files : Choose Files to Send.\n"
+					+ "3. Check : Create Communication Channel.\n"
+					+ "4. Confirm: Check if Receiver has Connected and Check Files.\n"
+					+ "5. Send: Send file. Be Patient ! A Dialog will appear when it is finished !";
 
 	/**
 	 * Creates new form SenderView
@@ -182,6 +188,11 @@ public class SenderView extends javax.swing.JFrame {
 	public JButton getjButton7() {
 		return jButton7;
 	}
+
+	public String getInstruction() {
+		return instruction;
+	}
+	
 	
 	
 
