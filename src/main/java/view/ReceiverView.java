@@ -27,6 +27,7 @@ public class ReceiverView extends javax.swing.JFrame {
 		initComponents();
 		setResizable(false);
 		setLocationRelativeTo(null);
+		setTitle("Receiver");
 	}
 
 	/**
@@ -46,13 +47,14 @@ public class ReceiverView extends javax.swing.JFrame {
         jButton3 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
+        jButton6 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             null,
             new String [] {
-                "Id", "Name", "Path", "Size"
+                "Id", "Name",
             }
         ));
         jScrollPane1.setViewportView(jTable1);
@@ -68,6 +70,8 @@ public class ReceiverView extends javax.swing.JFrame {
         jButton4.setText("Instruction");
 
         jButton5.setText("Download");
+
+        jButton6.setText("Reset");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -94,7 +98,10 @@ public class ReceiverView extends javax.swing.JFrame {
                         .addGap(92, 92, 92)
                         .addComponent(jButton4)
                         .addGap(113, 113, 113)
-                        .addComponent(jButton5)))
+                        .addComponent(jButton5))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(198, 198, 198)
+                        .addComponent(jButton6)))
                 .addContainerGap(29, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -115,7 +122,9 @@ public class ReceiverView extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton4)
                     .addComponent(jButton5))
-                .addGap(41, 41, 41))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton6)
+                .addGap(13, 13, 13))
         );
 
         pack();
@@ -152,14 +161,18 @@ public class ReceiverView extends javax.swing.JFrame {
 	public String getInstruction() {
 		return instruction;
 	}
-	
 
+	public JButton getjButton6() {
+		return jButton6;
+	}
+	
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
