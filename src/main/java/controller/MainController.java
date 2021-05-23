@@ -8,19 +8,27 @@ package controller;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.FileMetadata;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+
 import javax.swing.table.DefaultTableModel;
 import view.LoginView;
 import view.RoleView;
@@ -42,7 +50,7 @@ public class MainController implements ActionListener {
 	private JButton btnSender, btnReceiver;
 	// Sender
 	private SenderView sender;
-	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction;
+	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnCheck;
 	private JTable tblFile;
 	private JTextField txtCode;
 	private int code;
@@ -93,12 +101,17 @@ public class MainController implements ActionListener {
 		btnConfirm = sender.getjButton4();
 		btnConfirm.addActionListener(this);
 		btnConfirm.setActionCommand("btnConfirmSender");
+		btnConfirm.setEnabled(false);
 		btnSend = sender.getjButton5();
 		btnSend.addActionListener(this);
 		btnSend.setActionCommand("btnSend");
+		btnSend.setEnabled(false);
 		btnInstruction = sender.getjButton6();
 		btnInstruction.addActionListener(this);
 		btnInstruction.setActionCommand("btnInstructionSender");
+		btnCheck = sender.getjButton7();
+		btnCheck.addActionListener(this);
+		btnCheck.setActionCommand("btnCheckSender");
 		tblFile = sender.getjTable1();
 		txtCode = sender.getjTextField1();
 		chooser = new JFileChooser();
@@ -114,7 +127,7 @@ public class MainController implements ActionListener {
 		if (command.equals("btnLogin")) {
 			String token = txtToken.getText();
 			DbxRequestConfig config = DbxRequestConfig.newBuilder("sthidk").build();
-			DbxClientV2 client = new DbxClientV2(config, token);
+			client = new DbxClientV2(config, token);
 			try {
 				client.files().listFolder("");
 				lgView.dispose();
@@ -157,14 +170,62 @@ public class MainController implements ActionListener {
 			files.remove(index);
 
 		} else if (command.equals("btnInstructionSender")) {
-			String instruction = 
-					"1. Generate a code to comunicate between Sender and Receiver.\n"
-					+ "2. Choose Files to Send.\n"
-					+ "3. Confirm. If Success, Send code to Receiver. Cofirm on Receiver side.\n"
-					+ "4. Send. Then be Patient ! A Dialog will appear when it is finished !";
+			String instruction
+					= "1. Click Regenerate. Send code to Receiver. Let Receiver connected.\n"
+					+ "2. Choose Files : Choose Files to Send.\n"
+					+ "3. Check : Check if Receiver has Connected.\n"
+					+ "4. Confirm: If Check Successed, Send code to Receiver. Cofirm on Receiver side.\n"
+					+ "5. Send:  Send file. Be Patient ! A Dialog will appear when it is finished !";
 			JOptionPane.showMessageDialog(lgView, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
+		} else if (command.equals("btnCheckSender")) {
+			String path = "/" + code;
+			try {
+				//Create Folder
+				client.files().createFolderV2(path);
+			} catch (DbxException ex) {
+				JOptionPane.showMessageDialog(sender, "Code has been already used. Try Regenerate !", "Error", JOptionPane.WARNING_MESSAGE);
+				ex.printStackTrace();
+				return;
+			}
+			try {
+				// Upload Sender Confirmation
+				File tem = new File("SENDER_OK");
+				tem.createNewFile();
+				InputStream in = new FileInputStream(tem);
+				FileMetadata metadata = client.files().uploadBuilder(path).uploadAndFinish(in);
+			} catch (FileNotFoundException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (DbxException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			//Check if Receiver has connected
+			long timeLimit = 60000;
+			long timeStart = System.currentTimeMillis();
+			File temp = new File("RECEIVER_OK");
+			while ((System.currentTimeMillis() - timeStart) < timeLimit) {
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException ex) {
+					// TODO Auto-generated catch block
+					ex.printStackTrace();
+				}
+				try {
+					if (Arrays.asList(client.files().listFolder("")).contains(temp)) {
+						JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
+						return;
+					}
+				} catch (DbxException ex) {
+					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			}
+			JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
+
 		} else if (command.equals("btnConfirmSender")) {
-			
+
+		} else if (command.equals("btnSend")) {
+
 		}
 	}
 }
