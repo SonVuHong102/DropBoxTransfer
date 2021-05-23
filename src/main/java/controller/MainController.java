@@ -56,6 +56,7 @@ public class MainController implements ActionListener {
 	private int code;
 	private JFileChooser chooser;
 	private List<File> files;
+	private String path;
 
 	public MainController() {
 
@@ -173,12 +174,12 @@ public class MainController implements ActionListener {
 			String instruction
 					= "1. Click Regenerate. Send code to Receiver. Let Receiver connected.\n"
 					+ "2. Choose Files : Choose Files to Send.\n"
-					+ "3. Check : Check if Receiver has Connected.\n"
-					+ "4. Confirm: If Check Successed, Send code to Receiver. Cofirm on Receiver side.\n"
-					+ "5. Send:  Send file. Be Patient ! A Dialog will appear when it is finished !";
+					+ "3. Check : Create Communication Channel.\n"
+					+ "4. Confirm: Check if Receiver has Connected and Check Files.\n"
+					+ "5. Send: Send file. Be Patient ! A Dialog will appear when it is finished !";
 			JOptionPane.showMessageDialog(lgView, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
 		} else if (command.equals("btnCheckSender")) {
-			String path = "/" + code;
+			path = "/" + code;
 			try {
 				//Create Folder
 				client.files().createFolderV2(path);
@@ -189,10 +190,13 @@ public class MainController implements ActionListener {
 			}
 			try {
 				// Upload Sender Confirmation
-				File tem = new File("SENDER_OK");
+				File tem = new File("SENDER_OK.txt");
 				tem.createNewFile();
 				InputStream in = new FileInputStream(tem);
-				FileMetadata metadata = client.files().uploadBuilder(path).uploadAndFinish(in);
+				FileMetadata metadata = client.files().uploadBuilder(path+"/"+tem.getName()).uploadAndFinish(in);
+				JOptionPane.showMessageDialog(sender, "Channel created successfully", "Info", JOptionPane.INFORMATION_MESSAGE);
+				btnRegenerate.setEnabled(false);
+				btnCheck.setEnabled(false);
 			} catch (FileNotFoundException ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 			} catch (DbxException ex) {
@@ -200,30 +204,29 @@ public class MainController implements ActionListener {
 			} catch (IOException ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 			}
-			//Check if Receiver has connected
-			long timeLimit = 60000;
-			long timeStart = System.currentTimeMillis();
-			File temp = new File("RECEIVER_OK");
-			while ((System.currentTimeMillis() - timeStart) < timeLimit) {
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException ex) {
-					// TODO Auto-generated catch block
-					ex.printStackTrace();
-				}
-				try {
-					if (Arrays.asList(client.files().listFolder("")).contains(temp)) {
-						JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
-						return;
-					}
-				} catch (DbxException ex) {
-					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-				}
-			}
-			JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
 
 		} else if (command.equals("btnConfirmSender")) {
-
+			//Check if Receiver has connected
+//			long timeLimit = 60000;
+//			long timeStart = System.currentTimeMillis();
+//			File temp = new File("RECEIVER_OK.txt");
+//			while ((System.currentTimeMillis() - timeStart) < timeLimit) {
+//				try {
+//					Thread.sleep(3000);
+//				} catch (InterruptedException ex) {
+//					// TODO Auto-generated catch block
+//					ex.printStackTrace();
+//				}
+//				try {
+//					if (Arrays.asList(client.files().listFolder("")).contains(temp)) {
+//						JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
+//						return;
+//					}
+//				} catch (DbxException ex) {
+//					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+//				}
+//			}
+//			JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
 		} else if (command.equals("btnSend")) {
 
 		}
