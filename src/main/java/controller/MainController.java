@@ -5,17 +5,20 @@
  */
 package controller;
 
+import com.dropbox.core.DbxDownloader;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
+import com.dropbox.core.v2.files.SearchV2Result;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,7 +33,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-
 import javax.swing.table.DefaultTableModel;
 import view.LoginView;
 import view.ReceiverView;
@@ -63,7 +65,8 @@ public class MainController implements ActionListener {
 	//Receiver
 	private ReceiverView receiver;
 	private JButton btnDownload, btnGetList;
-
+	private List<String> fileNames;
+	
 	public MainController() {
 
 	}
@@ -127,7 +130,7 @@ public class MainController implements ActionListener {
 		sender.setFocusable(true);
 
 	}
-	
+
 	private void initReceiver() {
 		receiver = new ReceiverView();
 		btnConfirm = receiver.getjButton1();
@@ -163,18 +166,24 @@ public class MainController implements ActionListener {
 			} catch (DbxException ex) {
 				JOptionPane.showMessageDialog(lgView, "Token is invalid ! ", "Error", JOptionPane.WARNING_MESSAGE);
 			}
+
 		} else if (command.equals("btnSender")) {
 			initSender();
+			System.out.println("Sender");
 			sender.setVisible(true);
 			roleView.dispose();
+
 		} else if (command.equals("btnReceiver")) {
 			initReceiver();
+			System.out.println("Receiver");
 			receiver.setVisible(true);
 			roleView.dispose();
+
 		} else if (command.equals("btnRegenerate")) {
 			Random r = new Random();
 			code = Math.abs(r.nextInt()) % 1000;
 			txtCode.setText(code + "");
+
 		} else if (command.equals("btnFileChooser")) {
 			chooser.showOpenDialog(sender);
 			List<File> temp = Arrays.asList(chooser.getSelectedFiles());
@@ -189,6 +198,7 @@ public class MainController implements ActionListener {
 			for (File f : files) {
 				model.addRow(sender.fileToObject(++i, f));
 			}
+
 		} else if (command.equals("btnDeleteFile")) {
 			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
 			int index = tblFile.getSelectedRow();
@@ -203,6 +213,7 @@ public class MainController implements ActionListener {
 			String instruction
 					= sender.getInstruction();
 			JOptionPane.showMessageDialog(sender, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
+
 		} else if (command.equals("btnCheckSender")) {
 			path = "/" + code;
 			try {
@@ -218,10 +229,11 @@ public class MainController implements ActionListener {
 				File tem = new File("SENDER_OK.txt");
 				tem.createNewFile();
 				InputStream in = new FileInputStream(tem);
-				FileMetadata metadata = client.files().uploadBuilder(path+"/"+tem.getName()).uploadAndFinish(in);
+				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
 				JOptionPane.showMessageDialog(sender, "Channel created successfully", "Info", JOptionPane.INFORMATION_MESSAGE);
 				btnRegenerate.setEnabled(false);
 				btnCheck.setEnabled(false);
+				btnConfirm.setEnabled(true);
 			} catch (FileNotFoundException ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 			} catch (DbxException ex) {
@@ -232,8 +244,9 @@ public class MainController implements ActionListener {
 
 		} else if (command.equals("btnConfirmSender")) {
 //			Check if Receiver has connected
-			long timeLimit = 30000;
+			long timeLimit = 10000;
 			long timeStart = System.currentTimeMillis();
+			btnConfirm.setEnabled(false);
 			while ((System.currentTimeMillis() - timeStart) < timeLimit) {
 				try {
 					Thread.sleep(1000);
@@ -242,32 +255,88 @@ public class MainController implements ActionListener {
 					ex.printStackTrace();
 				}
 				try {
-					ListFolderResult list = client.files().listFolder(path);
-					for(Metadata data : list.getEntries()) {
-						if(data.getName().equals("RECEIVER_OK.txt")) {
-							JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
-							btnConfirm.setEnabled(false);
-							return;
-						}
+					SearchV2Result r = client.files().searchV2Builder("RECEIVER_OK.txt").start();
+					if (r.getMatches().size() > 0) {
+						JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
+						btnConfirm.setEnabled(false);
+						btnSend.setEnabled(true);
+						return;
 					}
-						
+
 				} catch (DbxException ex) {
 					JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
 					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
+			btnConfirm.setEnabled(true);
+
 		} else if (command.equals("btnSend")) {
-			
+			btnFileChooser.setEnabled(false);
+			btnDeleteFile.setEnabled(false);
+			InputStream in;
+			for(File f : files) {
+				try {
+					in = new FileInputStream(f);
+					FileMetadata metadata = client.files().uploadBuilder(path + "/" + f.getName()).uploadAndFinish(in);
+					in.close();
+				} catch (FileNotFoundException ex) {
+					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				} catch (DbxException ex) {
+					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				} catch (IOException ex) {
+					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			}
+			JOptionPane.showMessageDialog(sender, "Files has been uploaded ! Get list and Download on Receiver.", "Info", JOptionPane.INFORMATION_MESSAGE);
 		} else if (command.equals("btnConfirmReceiver")) {
-		
+			try {
+				code = Integer.parseInt(txtCode.getText());
+				path = "/" + code;
+				client.files().listFolder(path);
+				JOptionPane.showMessageDialog(receiver, "Connected to Sender !", "Info", JOptionPane.INFORMATION_MESSAGE);
+				btnConfirm.setEnabled(false);
+				txtCode.setEditable(false);
+				File tem = new File("RECEIVER_OK.txt");
+				tem.createNewFile();
+				InputStream in = new FileInputStream(tem);
+				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
+			} catch (NumberFormatException ex) {
+				JOptionPane.showMessageDialog(receiver, "Code is not Vaild !", "Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			} catch (DbxException ex) {
+				JOptionPane.showMessageDialog(receiver, "Sender has not Checked !", "Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			} catch (FileNotFoundException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+
 		} else if (command.equals("btnInstructionReceiver")) {
 			String instruction
 					= receiver.getInstruction();
 			JOptionPane.showMessageDialog(receiver, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
 		} else if (command.equals("btnGetList")) {
-		
+			try {
+				fileNames = new ArrayList<String>();
+				ListFolderResult list = client.files().listFolderBuilder(path).start();
+				for(Metadata d : list.getEntries()) {
+					if(d.getName().equals("SENDER_OK.txt") || d.getName().equals("RECEIVER_OK.TXT"))
+						continue;
+					fileNames.add(d.getName());
+				}
+				DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
+				model.setRowCount(0);
+				for(int i=1;i<fileNames.size();i++) {
+					model.addRow(new Object[] {
+						i,fileNames.get(i-1)
+					});
+				}
+			} catch (DbxException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		} else if (command.equals("btnDownload")) {
-		
+
 		}
 	}
 }
