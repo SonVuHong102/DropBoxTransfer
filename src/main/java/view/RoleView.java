@@ -24,6 +24,7 @@ public class RoleView extends javax.swing.JFrame {
 		initComponents();
 		setTitle("Choose Role");
 		setLocationRelativeTo(null);
+		setResizable(false);
 	}
 
 	/**
