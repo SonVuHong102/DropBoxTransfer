@@ -53,12 +53,13 @@ public class MainController implements ActionListener {
 	//Role
 	private RoleView roleView;
 	private JButton btnSender, btnReceiver;
+	private boolean role; // true : Sender , false : Receiver
 	// Sender
 	private SenderView sender;
-	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnCheck;
+	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnCheck,btnReset;
 	private JTable tblFile;
 	private JTextField txtCode;
-	private int code;
+	private int code = -1;
 	private JFileChooser chooser;
 	private List<File> files;
 	private String path;
@@ -66,7 +67,7 @@ public class MainController implements ActionListener {
 	private ReceiverView receiver;
 	private JButton btnDownload, btnGetList;
 	private List<String> fileNames;
-	
+
 	public MainController() {
 
 	}
@@ -89,10 +90,8 @@ public class MainController implements ActionListener {
 		roleView = new RoleView();
 		btnSender = roleView.getjButton1();
 		btnReceiver = roleView.getjButton3();
-
 		btnSender.addActionListener(this);
 		btnSender.setActionCommand("btnSender");
-
 		btnReceiver.addActionListener(this);
 		btnReceiver.setActionCommand("btnReceiver");
 	}
@@ -128,6 +127,9 @@ public class MainController implements ActionListener {
 		chooser.setMultiSelectionEnabled(true);
 		files = new ArrayList<File>();
 		sender.setFocusable(true);
+		btnReset = sender.getjButton8();
+		btnReset.addActionListener(this);
+		btnReset.setActionCommand("btnReset");
 
 	}
 
@@ -150,6 +152,9 @@ public class MainController implements ActionListener {
 		btnDownload.setActionCommand("btnDownload");
 		txtCode = receiver.getjTextField1();
 		tblFile = receiver.getjTable1();
+		btnReset = receiver.getjButton6();
+		btnReset.addActionListener(this);
+		btnReset.setActionCommand("btnReset");
 	}
 
 	@Override
@@ -169,13 +174,13 @@ public class MainController implements ActionListener {
 
 		} else if (command.equals("btnSender")) {
 			initSender();
-			System.out.println("Sender");
+			role = true;
 			sender.setVisible(true);
 			roleView.dispose();
 
 		} else if (command.equals("btnReceiver")) {
 			initReceiver();
-			System.out.println("Receiver");
+			role = false;
 			receiver.setVisible(true);
 			roleView.dispose();
 
@@ -203,11 +208,15 @@ public class MainController implements ActionListener {
 			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
 			int index = tblFile.getSelectedRow();
 			if (index == -1) {
-				JOptionPane.showMessageDialog(lgView, "List is Empty ! ", "Warning", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(sender, "List is Empty ! ", "Warning", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
 			model.removeRow(index);
-			files.remove(index);
+			if (role) {
+				files.remove(index);
+			} else {
+				fileNames.remove(index);
+			}
 
 		} else if (command.equals("btnInstructionSender")) {
 			String instruction
@@ -215,6 +224,10 @@ public class MainController implements ActionListener {
 			JOptionPane.showMessageDialog(sender, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
 
 		} else if (command.equals("btnCheckSender")) {
+			if(code==-1) {
+				JOptionPane.showMessageDialog(sender, "Regenerate First !", "Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
 			path = "/" + code;
 			try {
 				//Create Folder
@@ -244,37 +257,26 @@ public class MainController implements ActionListener {
 
 		} else if (command.equals("btnConfirmSender")) {
 //			Check if Receiver has connected
-			long timeLimit = 10000;
-			long timeStart = System.currentTimeMillis();
 			btnConfirm.setEnabled(false);
-			while ((System.currentTimeMillis() - timeStart) < timeLimit) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException ex) {
-					// TODO Auto-generated catch block
-					ex.printStackTrace();
+			try {
+				SearchV2Result r = client.files().searchV2Builder("RECEIVER_OK.txt").start();
+				if (r.getMatches().size() > 0) {
+					JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
+					btnConfirm.setEnabled(false);
+					btnSend.setEnabled(true);
+					return;
 				}
-				try {
-					SearchV2Result r = client.files().searchV2Builder("RECEIVER_OK.txt").start();
-					if (r.getMatches().size() > 0) {
-						JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
-						btnConfirm.setEnabled(false);
-						btnSend.setEnabled(true);
-						return;
-					}
-
-				} catch (DbxException ex) {
-					JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
-					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-				}
+			} catch (DbxException ex) {
+					
 			}
 			btnConfirm.setEnabled(true);
+			JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
 
 		} else if (command.equals("btnSend")) {
 			btnFileChooser.setEnabled(false);
 			btnDeleteFile.setEnabled(false);
 			InputStream in;
-			for(File f : files) {
+			for (File f : files) {
 				try {
 					in = new FileInputStream(f);
 					FileMetadata metadata = client.files().uploadBuilder(path + "/" + f.getName()).uploadAndFinish(in);
@@ -288,18 +290,19 @@ public class MainController implements ActionListener {
 				}
 			}
 			JOptionPane.showMessageDialog(sender, "Files has been uploaded ! Get list and Download on Receiver.", "Info", JOptionPane.INFORMATION_MESSAGE);
+
 		} else if (command.equals("btnConfirmReceiver")) {
 			try {
 				code = Integer.parseInt(txtCode.getText());
 				path = "/" + code;
 				client.files().listFolder(path);
-				JOptionPane.showMessageDialog(receiver, "Connected to Sender !", "Info", JOptionPane.INFORMATION_MESSAGE);
 				btnConfirm.setEnabled(false);
 				txtCode.setEditable(false);
 				File tem = new File("RECEIVER_OK.txt");
 				tem.createNewFile();
 				InputStream in = new FileInputStream(tem);
 				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
+				JOptionPane.showMessageDialog(receiver, "Connected to Sender !", "Info", JOptionPane.INFORMATION_MESSAGE);
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(receiver, "Code is not Vaild !", "Error", JOptionPane.WARNING_MESSAGE);
 				return;
@@ -316,27 +319,84 @@ public class MainController implements ActionListener {
 			String instruction
 					= receiver.getInstruction();
 			JOptionPane.showMessageDialog(receiver, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
+
 		} else if (command.equals("btnGetList")) {
 			try {
 				fileNames = new ArrayList<String>();
 				ListFolderResult list = client.files().listFolderBuilder(path).start();
-				for(Metadata d : list.getEntries()) {
-					if(d.getName().equals("SENDER_OK.txt") || d.getName().equals("RECEIVER_OK.TXT"))
+				for (Metadata d : list.getEntries()) {
+					if (d.getName().equals("SENDER_OK.txt") || d.getName().equals("RECEIVER_OK.txt")) {
 						continue;
+					}
 					fileNames.add(d.getName());
 				}
 				DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
 				model.setRowCount(0);
-				for(int i=1;i<fileNames.size();i++) {
-					model.addRow(new Object[] {
-						i,fileNames.get(i-1)
+				for (int i = 0; i < fileNames.size(); i++) {
+					model.addRow(new Object[]{
+						i + 1, fileNames.get(i)
 					});
 				}
 			} catch (DbxException ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 			}
-		} else if (command.equals("btnDownload")) {
 
+		} else if (command.equals("btnDownload")) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int option = fileChooser.showOpenDialog(receiver);
+			File downloadPath;
+			if (option == JFileChooser.APPROVE_OPTION) {
+				downloadPath = fileChooser.getSelectedFile();
+			} else {
+				JOptionPane.showMessageDialog(receiver, "Canceled Download Process !", "Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+
+			try {
+				ListFolderResult list = client.files().listFolderBuilder(path).start();
+				for (Metadata d : list.getEntries()) {
+					if (fileNames.contains(d.getName())) {
+						DbxDownloader<FileMetadata> downloader = client.files().download(d.getPathLower());
+						FileOutputStream out = new FileOutputStream(downloadPath + "/" + d.getName());
+						downloader.download(out);
+						out.close();
+					}
+				}
+			} catch (DbxException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (FileNotFoundException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			JOptionPane.showMessageDialog(receiver, "Files Downloaded Successfully !", "Info", JOptionPane.INFORMATION_MESSAGE);
+			
+		} else if (command.equals("btnReset")) {
+			if(role) {
+				if(code != -1) {
+					try {
+						client.files().deleteV2("/" + code);
+					} catch (DbxException ex) {
+						
+					}
+				}
+				txtCode.setText("");
+				btnRegenerate.setEnabled(true);
+				btnCheck.setEnabled(true);
+				btnConfirm.setEnabled(false);
+				btnSend.setEnabled(false);
+				btnFileChooser.setEnabled(true);
+				btnDeleteFile.setEnabled(true);
+				files = new ArrayList<File>();
+			}
+			else {
+				txtCode.setText("");
+				btnConfirm.setEnabled(true);
+				fileNames.clear();
+			}
+			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
+			model.setRowCount(0);
 		}
 	}
 }
