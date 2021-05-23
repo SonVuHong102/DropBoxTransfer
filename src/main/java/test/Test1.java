@@ -26,7 +26,7 @@ public class Test1 {
 		DbxRequestConfig config = DbxRequestConfig.newBuilder("dropbox/java-tutorial").build();
 		DbxClientV2 client = new DbxClientV2(config, ACCESS_TOKEN);
 		
-		ListFolderResult result = client.files().listFolder("");
+		ListFolderResult result = client.files().listFolder("/test1");
 		while (true) {
 			for (Metadata metadata : result.getEntries()) {
 				System.out.println(metadata.getPathLower());
@@ -36,12 +36,5 @@ public class Test1 {
 			}
 			result = client.files().listFolderContinue(result.getCursor());
 		}
-//		InputStream in = new FileInputStream("C:\\Users\\Admin\\Downloads\\2.txt");
-//		FileMetadata metadata = client.files().uploadBuilder("/test.txt").uploadAndFinish(in);
-//		in.close();
-		DbxDownloader<FileMetadata> downloader = client.files().download("/test.txt");
-		FileOutputStream out = new FileOutputStream("test.txt");
-		downloader.download(out);
-		out.close();
 	}
 }
