@@ -239,7 +239,7 @@ public class MainController implements ActionListener {
 			}
 			try {
 				// Upload Sender Confirmation
-				File tem = new File("src/main/java/model/SENDER_OK.txt");
+				File tem = new File("SENDER_OK.txt");
 				tem.createNewFile();
 				InputStream in = new FileInputStream(tem);
 				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
@@ -298,7 +298,7 @@ public class MainController implements ActionListener {
 				client.files().listFolder(path);
 				btnConfirm.setEnabled(false);
 				txtCode.setEditable(false);
-				File tem = new File("src/main/java/model/RECEIVER_OK.txt");
+				File tem = new File("RECEIVER_OK.txt");
 				tem.createNewFile();
 				InputStream in = new FileInputStream(tem);
 				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
