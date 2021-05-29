@@ -7,6 +7,8 @@ package view;
 
 import java.io.File;
 import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
@@ -16,11 +18,9 @@ import javax.swing.JTextField;
  */
 public class SenderView extends javax.swing.JFrame {
 
-	private String instruction = "1. Click Regenerate. Send code to Receiver. Let Receiver connected.\n"
+	private String instruction = "1. Click Regenerate. \n"
 			+ "2. Choose Files : Choose Files to Send.\n"
-			+ "3. Check : Create Communication Channel.\n"
-			+ "4. Confirm: Check if Receiver has Connected and Check Files.\n"
-			+ "5. Send: Send file. Be Patient ! A Dialog will appear when it is finished !";
+			+ "3. Confirm & Send: Send file. Be Patient ! A dialog will show up when it is finished !\n";
 
 	/**
 	 * Creates new form SenderView
@@ -48,11 +48,10 @@ public class SenderView extends javax.swing.JFrame {
         jTable1 = new javax.swing.JTable();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -76,33 +75,29 @@ public class SenderView extends javax.swing.JFrame {
 
         jButton3.setText("Delete File");
 
-        jButton4.setText("Confirm");
-
-        jButton5.setText("Send");
+        jButton5.setText("Confirm & Send");
 
         jButton6.setText("Instruction");
 
-        jButton7.setText("Check");
-
         jButton8.setText("Reset");
+
+        jLabel3.setText("Status : none");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap(42, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
                             .addGap(13, 13, 13)
                             .addComponent(jButton6)
-                            .addGap(31, 31, 31)
-                            .addComponent(jButton7)
-                            .addGap(29, 29, 29)
-                            .addComponent(jButton4)
-                            .addGap(34, 34, 34)
-                            .addComponent(jButton5))
+                            .addGap(43, 43, 43)
+                            .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(26, 26, 26)
+                            .addComponent(jButton8))
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 429, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(26, 26, 26)
@@ -116,12 +111,12 @@ public class SenderView extends javax.swing.JFrame {
                         .addGap(27, 27, 27)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 73, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(29, 29, 29))
             .addGroup(layout.createSequentialGroup()
-                .addGap(209, 209, 209)
-                .addComponent(jButton8)
+                .addGap(193, 193, 193)
+                .addComponent(jLabel3)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -146,12 +141,11 @@ public class SenderView extends javax.swing.JFrame {
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(27, 27, 27)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton4)
                     .addComponent(jButton5)
                     .addComponent(jButton6)
-                    .addComponent(jButton7))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton8)
+                    .addComponent(jButton8))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel3)
                 .addGap(12, 12, 12))
         );
 
@@ -162,6 +156,10 @@ public class SenderView extends javax.swing.JFrame {
 		return (new Object[]{
 			i + "", f.getName(), f.getAbsolutePath(), f.length()
 		});
+	}
+
+	public JLabel getjLabel3() {
+		return jLabel3;
 	}
 
 	public JButton getjButton1() {
@@ -176,9 +174,6 @@ public class SenderView extends javax.swing.JFrame {
 		return jButton3;
 	}
 
-	public JButton getjButton4() {
-		return jButton4;
-	}
 
 	public JButton getjButton5() {
 		return jButton5;
@@ -196,9 +191,6 @@ public class SenderView extends javax.swing.JFrame {
 		return jTable1;
 	}
 
-	public JButton getjButton7() {
-		return jButton7;
-	}
 
 	public String getInstruction() {
 		return instruction;
@@ -212,13 +204,12 @@ public class SenderView extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextField1;
