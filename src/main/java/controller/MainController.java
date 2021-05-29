@@ -13,28 +13,30 @@ import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
 import com.dropbox.core.v2.files.SearchV2Result;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import view.LoginView;
 import view.ReceiverView;
 import view.RoleView;
 import view.SenderView;
@@ -46,30 +48,32 @@ import view.SenderView;
 public class MainController implements ActionListener {
 
 	//Login
-	private LoginView lgView;
-	private JButton btnLogin;
-	private JTextArea txtToken;
+	private String token;
 	private DbxClientV2 client;
 	//Role
 	private RoleView roleView;
+	private JRadioButton btnLocal, btnInternet;
+	private ButtonGroup radioGroup;
+	private boolean type; // true : local, false - internet
 	private JButton btnSender, btnReceiver;
 	private boolean role; // true : Sender , false : Receiver
 	// Sender
 	private SenderView sender;
-	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnCheck,btnReset;
+	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnCheck, btnReset;
 	private JTable tblFile;
 	private JTextField txtCode;
 	private int code = -1;
 	private JFileChooser chooser;
 	private List<File> files;
 	private String path;
+	private JLabel lbStatus;
 	//Receiver
 	private ReceiverView receiver;
 	private JButton btnDownload, btnGetList;
 	private List<String> fileNames;
 
 	public MainController() {
-
+		super();
 	}
 
 	public void start() {
@@ -78,12 +82,14 @@ public class MainController implements ActionListener {
 	}
 
 	private void initLogin() {
-		lgView = new LoginView();
-		btnLogin = lgView.getjButton1();
-		txtToken = lgView.getjTextArea1();
-		client = null;
-		btnLogin.addActionListener(this);
-		btnLogin.setActionCommand("btnLogin");
+		try {
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("src/main/java/res/test.app"));
+			token = (String) ois.readObject();
+			DbxRequestConfig config = DbxRequestConfig.newBuilder("sthidk").build();
+			client = new DbxClientV2(config, token);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	private void initRole() {
@@ -94,6 +100,12 @@ public class MainController implements ActionListener {
 		btnSender.setActionCommand("btnSender");
 		btnReceiver.addActionListener(this);
 		btnReceiver.setActionCommand("btnReceiver");
+		btnLocal = roleView.getjRadioButton1();
+		btnLocal.setSelected(true);
+		btnInternet = roleView.getjRadioButton2();
+		radioGroup = new ButtonGroup();
+		radioGroup.add(btnLocal);
+		radioGroup.add(btnInternet);
 	}
 
 	private void initSender() {
@@ -107,20 +119,12 @@ public class MainController implements ActionListener {
 		btnDeleteFile = sender.getjButton3();
 		btnDeleteFile.addActionListener(this);
 		btnDeleteFile.setActionCommand("btnDeleteFile");
-		btnConfirm = sender.getjButton4();
-		btnConfirm.addActionListener(this);
-		btnConfirm.setActionCommand("btnConfirmSender");
-		btnConfirm.setEnabled(false);
 		btnSend = sender.getjButton5();
 		btnSend.addActionListener(this);
 		btnSend.setActionCommand("btnSend");
-		btnSend.setEnabled(false);
 		btnInstruction = sender.getjButton6();
 		btnInstruction.addActionListener(this);
 		btnInstruction.setActionCommand("btnInstructionSender");
-		btnCheck = sender.getjButton7();
-		btnCheck.addActionListener(this);
-		btnCheck.setActionCommand("btnCheckSender");
 		tblFile = sender.getjTable1();
 		txtCode = sender.getjTextField1();
 		chooser = new JFileChooser();
@@ -130,6 +134,8 @@ public class MainController implements ActionListener {
 		btnReset = sender.getjButton8();
 		btnReset.addActionListener(this);
 		btnReset.setActionCommand("btnReset");
+		lbStatus = sender.getjLabel3();
+		//Reset when close
 
 	}
 
@@ -155,24 +161,13 @@ public class MainController implements ActionListener {
 		btnReset = receiver.getjButton6();
 		btnReset.addActionListener(this);
 		btnReset.setActionCommand("btnReset");
+		lbStatus =receiver.getjLabel2();
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		if (command.equals("btnLogin")) {
-			String token = txtToken.getText();
-			DbxRequestConfig config = DbxRequestConfig.newBuilder("sthidk").build();
-			client = new DbxClientV2(config, token);
-			try {
-				client.files().listFolder("");
-				lgView.dispose();
-				roleView.setVisible(true);
-			} catch (DbxException ex) {
-				JOptionPane.showMessageDialog(lgView, "Token is invalid ! ", "Error", JOptionPane.WARNING_MESSAGE);
-			}
-
-		} else if (command.equals("btnSender")) {
+		if (command.equals("btnSender")) {
 			initSender();
 			role = true;
 			sender.setVisible(true);
@@ -223,56 +218,32 @@ public class MainController implements ActionListener {
 					= sender.getInstruction();
 			JOptionPane.showMessageDialog(sender, instruction, "Instruction", JOptionPane.INFORMATION_MESSAGE);
 
-		} else if (command.equals("btnCheckSender")) {
-			if(code==-1) {
-				JOptionPane.showMessageDialog(sender, "Regenerate First !", "Error", JOptionPane.WARNING_MESSAGE);
-				return;
-			}
-			path = "/" + code;
+		} else if (command.equals("btnSend")) {
 			try {
-				//Create Folder
-				client.files().createFolderV2(path);
-			} catch (DbxException ex) {
-				JOptionPane.showMessageDialog(sender, "Code has been already used. Try Regenerate !", "Error", JOptionPane.WARNING_MESSAGE);
-				ex.printStackTrace();
-				return;
-			}
-			try {
-				// Upload Sender Confirmation
-				File tem = new File("src/main/java/model/SENDER_OK.txt");
-				tem.createNewFile();
-				InputStream in = new FileInputStream(tem);
-				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
-				JOptionPane.showMessageDialog(sender, "Channel created successfully", "Info", JOptionPane.INFORMATION_MESSAGE);
-				btnRegenerate.setEnabled(false);
-				btnCheck.setEnabled(false);
-				btnConfirm.setEnabled(true);
-			} catch (FileNotFoundException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (DbxException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (IOException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-			}
-
-		} else if (command.equals("btnConfirmSender")) {
-//			Check if Receiver has connected
-			btnConfirm.setEnabled(false);
-			try {
-				SearchV2Result r = client.files().searchV2Builder("RECEIVER_OK.txt").start();
-				if (r.getMatches().size() > 0) {
-					JOptionPane.showMessageDialog(sender, "Receiver has Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
-					btnConfirm.setEnabled(false);
-					btnSend.setEnabled(true);
+				//Regenerate code
+				if (code == -1) {
+					JOptionPane.showMessageDialog(sender, "Regenerate First !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
-			} catch (DbxException ex) {
-					
-			}
-			btnConfirm.setEnabled(true);
-			JOptionPane.showMessageDialog(sender, "Receiver has not Connected !", "Info", JOptionPane.INFORMATION_MESSAGE);
+				if(files.size()==0) {
+					JOptionPane.showMessageDialog(sender, "File list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				path = "/" + code;
+				//Create folder
+				client.files().createFolderV2(path);
 
-		} else if (command.equals("btnSend")) {
+				btnRegenerate.setEnabled(false);
+			} catch (DbxException ex) {
+				JOptionPane.showMessageDialog(sender, "Code has been already used. Try Regenerate !", "Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+
+			// Send
+			if (files.size() == 0) {
+				JOptionPane.showMessageDialog(sender, "File list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
 			btnFileChooser.setEnabled(false);
 			btnDeleteFile.setEnabled(false);
 			InputStream in;
@@ -281,15 +252,30 @@ public class MainController implements ActionListener {
 					in = new FileInputStream(f);
 					FileMetadata metadata = client.files().uploadBuilder(path + "/" + f.getName()).uploadAndFinish(in);
 					in.close();
-				} catch (FileNotFoundException ex) {
-					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-				} catch (DbxException ex) {
-					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-				} catch (IOException ex) {
-					Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(sender, "SOMETHING WRONG !", "Error", JOptionPane.WARNING_MESSAGE);
+					ex.printStackTrace();
+					return;
 				}
 			}
-			JOptionPane.showMessageDialog(sender, "Files has been uploaded ! Get list and Download on Receiver.", "Info", JOptionPane.INFORMATION_MESSAGE);
+			// Upload Sender Confirmation
+			try {
+				File tem = new File(code + "_SENDER_OK.txt");
+				tem.createNewFile();
+				InputStream ins = new FileInputStream(tem);
+				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(ins);
+				tem.delete();
+				lbStatus.setForeground(Color.green);
+				lbStatus.setText("Status : Uploaded");
+				JOptionPane.showMessageDialog(sender,
+						"Files has been uploaded ! Get list and Download on Receiver.", "Info", JOptionPane.INFORMATION_MESSAGE);
+				btnSend.setEnabled(false);
+				
+			} catch (DbxException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+			}
 
 		} else if (command.equals("btnConfirmReceiver")) {
 			try {
@@ -298,21 +284,13 @@ public class MainController implements ActionListener {
 				client.files().listFolder(path);
 				btnConfirm.setEnabled(false);
 				txtCode.setEditable(false);
-				File tem = new File("src/main/java/model/RECEIVER_OK.txt");
-				tem.createNewFile();
-				InputStream in = new FileInputStream(tem);
-				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(in);
+				lbStatus.setText("Status : Connected");
 				JOptionPane.showMessageDialog(receiver, "Connected to Sender !", "Info", JOptionPane.INFORMATION_MESSAGE);
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(receiver, "Code is not Vaild !", "Error", JOptionPane.WARNING_MESSAGE);
 				return;
 			} catch (DbxException ex) {
-				JOptionPane.showMessageDialog(receiver, "Sender has not Checked !", "Error", JOptionPane.WARNING_MESSAGE);
-				return;
-			} catch (FileNotFoundException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (IOException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				ex.printStackTrace();
 			}
 
 		} else if (command.equals("btnInstructionReceiver")) {
@@ -322,10 +300,20 @@ public class MainController implements ActionListener {
 
 		} else if (command.equals("btnGetList")) {
 			try {
-				fileNames = new ArrayList<String>();
+				SearchV2Result r = client.files().searchV2Builder(code + "_SENDER_OK.txt").start();
+				if (r.getMatches().size() == 0) {
+					JOptionPane.showMessageDialog(sender, "Sender has NOT finnished transferal !", "Info", JOptionPane.INFORMATION_MESSAGE);
+					return;
+				}
+			} catch (DbxException ex) {
+				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				return;
+			}
+			try {
+				fileNames = new ArrayList<>();
 				ListFolderResult list = client.files().listFolderBuilder(path).start();
 				for (Metadata d : list.getEntries()) {
-					if (d.getName().equals("SENDER_OK.txt") || d.getName().equals("RECEIVER_OK.txt")) {
+					if (d.getName().equals(code+"_SENDER_OK.txt")) {
 						continue;
 					}
 					fileNames.add(d.getName());
@@ -354,6 +342,10 @@ public class MainController implements ActionListener {
 			}
 
 			try {
+				if(fileNames.size()==0) {
+					JOptionPane.showMessageDialog(receiver, "Download list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
 				ListFolderResult list = client.files().listFolderBuilder(path).start();
 				for (Metadata d : list.getEntries()) {
 					if (fileNames.contains(d.getName())) {
@@ -363,38 +355,39 @@ public class MainController implements ActionListener {
 						out.close();
 					}
 				}
-			} catch (DbxException ex) {
+			} catch (Exception ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (FileNotFoundException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (IOException ex) {
-				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+				return;
 			}
+			lbStatus.setText("Status : Downloaded");
+			lbStatus.setForeground(Color.green);
 			JOptionPane.showMessageDialog(receiver, "Files Downloaded Successfully !", "Info", JOptionPane.INFORMATION_MESSAGE);
-			
+
 		} else if (command.equals("btnReset")) {
-			if(role) {
-				if(code != -1) {
+			if (role) {
+				if (code != -1) {
 					try {
 						client.files().deleteV2("/" + code);
 					} catch (DbxException ex) {
-						
+
 					}
 				}
 				txtCode.setText("");
 				btnRegenerate.setEnabled(true);
-				btnCheck.setEnabled(true);
-				btnConfirm.setEnabled(false);
-				btnSend.setEnabled(false);
+				btnSend.setEnabled(true);
 				btnFileChooser.setEnabled(true);
 				btnDeleteFile.setEnabled(true);
 				files = new ArrayList<File>();
-			}
-			else {
+			} else {
 				txtCode.setText("");
 				btnConfirm.setEnabled(true);
-				fileNames.clear();
+				if (fileNames != null) {
+					fileNames.clear();
+				}
+				txtCode.setEnabled(true);
 			}
+			lbStatus.setForeground(Color.black);
+			lbStatus.setText("Status : none");
 			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
 			model.setRowCount(0);
 		}
