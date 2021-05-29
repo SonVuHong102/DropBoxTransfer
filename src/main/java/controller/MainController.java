@@ -264,6 +264,7 @@ public class MainController implements ActionListener {
 				tem.createNewFile();
 				InputStream ins = new FileInputStream(tem);
 				FileMetadata metadata = client.files().uploadBuilder(path + "/" + tem.getName()).uploadAndFinish(ins);
+				ins.close();
 				tem.delete();
 				lbStatus.setForeground(Color.green);
 				lbStatus.setText("Status : Uploaded");
