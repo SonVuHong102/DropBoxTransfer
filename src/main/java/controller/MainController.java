@@ -59,7 +59,7 @@ public class MainController implements ActionListener {
 	private boolean role; // true : Sender , false : Receiver
 	// Sender
 	private SenderView sender;
-	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnCheck, btnReset;
+	private JButton btnRegenerate, btnFileChooser, btnDeleteFile, btnConfirm, btnSend, btnInstruction, btnReset;
 	private JTable tblFile;
 	private JTextField txtCode;
 	private int code = -1;
