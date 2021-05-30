@@ -28,12 +28,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JRadioButton;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
@@ -52,9 +50,6 @@ public class MainController implements ActionListener {
 	private DbxClientV2 client;
 	//Role
 	private RoleView roleView;
-	private JRadioButton btnLocal, btnInternet;
-	private ButtonGroup radioGroup;
-	private boolean type; // true : local, false - internet
 	private JButton btnSender, btnReceiver;
 	private boolean role; // true : Sender , false : Receiver
 	// Sender
@@ -100,16 +95,6 @@ public class MainController implements ActionListener {
 		btnSender.setActionCommand("btnSender");
 		btnReceiver.addActionListener(this);
 		btnReceiver.setActionCommand("btnReceiver");
-		btnLocal = roleView.getjRadioButton1();
-		btnInternet = roleView.getjRadioButton2();
-		radioGroup = new ButtonGroup();
-		radioGroup.add(btnLocal);
-		radioGroup.add(btnInternet);
-		btnLocal.addActionListener(this);
-		btnLocal.setActionCommand("btnLocal");
-		btnInternet.addActionListener(this);
-		btnInternet.setActionCommand("btnInternet");
-		btnLocal.setSelected(true);
 	}
 
 	private void initSender() {
@@ -133,7 +118,7 @@ public class MainController implements ActionListener {
 		txtCode = sender.getjTextField1();
 		chooser = new JFileChooser();
 		chooser.setMultiSelectionEnabled(true);
-		files = new ArrayList<File>();
+		files = new ArrayList<>();
 		sender.setFocusable(true);
 		btnReset = sender.getjButton8();
 		btnReset.addActionListener(this);
@@ -182,12 +167,6 @@ public class MainController implements ActionListener {
 			receiver.setVisible(true);
 			roleView.dispose();
 
-		} else if (command.equals("btnLocal")) {
-			type = true;
-
-		} else if (command.equals("btnInternet")) {
-			type = false;
-
 		} else if (command.equals("btnRegenerate")) {
 			Random r = new Random();
 			code = Math.abs(r.nextInt()) % 1000;
@@ -234,7 +213,7 @@ public class MainController implements ActionListener {
 					JOptionPane.showMessageDialog(sender, "Regenerate First !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
-				if (files.size() == 0) {
+				if (files.isEmpty()) {
 					JOptionPane.showMessageDialog(sender, "File list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
@@ -249,7 +228,7 @@ public class MainController implements ActionListener {
 			}
 
 			// Send
-			if (files.size() == 0) {
+			if (files.isEmpty()) {
 				JOptionPane.showMessageDialog(sender, "File list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
@@ -309,7 +288,7 @@ public class MainController implements ActionListener {
 		} else if (command.equals("btnGetList")) {
 			try {
 				SearchV2Result r = client.files().searchV2Builder(code + "_SENDER_OK.txt").start();
-				if (r.getMatches().size() == 0) {
+				if (r.getMatches().isEmpty()) {
 					JOptionPane.showMessageDialog(sender, "Sender has NOT finnished transferal !", "Info", JOptionPane.INFORMATION_MESSAGE);
 					return;
 				}
@@ -350,7 +329,7 @@ public class MainController implements ActionListener {
 			}
 
 			try {
-				if (fileNames.size() == 0) {
+				if (fileNames.isEmpty()) {
 					JOptionPane.showMessageDialog(receiver, "Download list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
