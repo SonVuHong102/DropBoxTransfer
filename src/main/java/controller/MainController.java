@@ -380,20 +380,19 @@ public class MainController implements ActionListener {
 
 					}
 				}
-				txtCode.setText("");
 				btnRegenerate.setEnabled(true);
 				btnSend.setEnabled(true);
 				btnFileChooser.setEnabled(true);
 				btnDeleteFile.setEnabled(true);
 				files = new ArrayList<File>();
 			} else {
-				txtCode.setText("");
-				txtCode.setEnabled(true);
 				btnConfirm.setEnabled(true);
 				if (fileNames != null) {
 					fileNames.clear();
 				}
 			}
+			txtCode.setText("");
+			txtCode.setEditable(true);
 			lbStatus.setForeground(Color.black);
 			lbStatus.setText("Status : none");
 			DefaultTableModel model = (DefaultTableModel) tblFile.getModel();
