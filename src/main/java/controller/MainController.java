@@ -101,11 +101,15 @@ public class MainController implements ActionListener {
 		btnReceiver.addActionListener(this);
 		btnReceiver.setActionCommand("btnReceiver");
 		btnLocal = roleView.getjRadioButton1();
-		btnLocal.setSelected(true);
 		btnInternet = roleView.getjRadioButton2();
 		radioGroup = new ButtonGroup();
 		radioGroup.add(btnLocal);
 		radioGroup.add(btnInternet);
+		btnLocal.addActionListener(this);
+		btnLocal.setActionCommand("btnLocal");
+		btnInternet.addActionListener(this);
+		btnInternet.setActionCommand("btnInternet");
+		btnLocal.setSelected(true);
 	}
 
 	private void initSender() {
@@ -135,7 +139,6 @@ public class MainController implements ActionListener {
 		btnReset.addActionListener(this);
 		btnReset.setActionCommand("btnReset");
 		lbStatus = sender.getjLabel3();
-		//Reset when close
 
 	}
 
@@ -161,23 +164,29 @@ public class MainController implements ActionListener {
 		btnReset = receiver.getjButton6();
 		btnReset.addActionListener(this);
 		btnReset.setActionCommand("btnReset");
-		lbStatus =receiver.getjLabel2();
+		lbStatus = receiver.getjLabel2();
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if (command.equals("btnSender")) {
-			initSender();
 			role = true;
+			initSender();
 			sender.setVisible(true);
 			roleView.dispose();
 
 		} else if (command.equals("btnReceiver")) {
-			initReceiver();
 			role = false;
+			initReceiver();
 			receiver.setVisible(true);
 			roleView.dispose();
+
+		} else if (command.equals("btnLocal")) {
+			type = true;
+
+		} else if (command.equals("btnInternet")) {
+			type = false;
 
 		} else if (command.equals("btnRegenerate")) {
 			Random r = new Random();
@@ -225,7 +234,7 @@ public class MainController implements ActionListener {
 					JOptionPane.showMessageDialog(sender, "Regenerate First !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
-				if(files.size()==0) {
+				if (files.size() == 0) {
 					JOptionPane.showMessageDialog(sender, "File list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
@@ -253,7 +262,7 @@ public class MainController implements ActionListener {
 					FileMetadata metadata = client.files().uploadBuilder(path + "/" + f.getName()).uploadAndFinish(in);
 					in.close();
 				} catch (Exception ex) {
-					JOptionPane.showMessageDialog(sender, "SOMETHING WRONG !", "Error", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(sender, "SOMETHING WRONG ! BUT IDK :) ", "Error", JOptionPane.WARNING_MESSAGE);
 					ex.printStackTrace();
 					return;
 				}
@@ -271,13 +280,12 @@ public class MainController implements ActionListener {
 				JOptionPane.showMessageDialog(sender,
 						"Files has been uploaded ! Get list and Download on Receiver.", "Info", JOptionPane.INFORMATION_MESSAGE);
 				btnSend.setEnabled(false);
-				
+
 			} catch (DbxException ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 			} catch (IOException ex) {
 				Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
 			}
-
 		} else if (command.equals("btnConfirmReceiver")) {
 			try {
 				code = Integer.parseInt(txtCode.getText());
@@ -293,7 +301,6 @@ public class MainController implements ActionListener {
 			} catch (DbxException ex) {
 				ex.printStackTrace();
 			}
-
 		} else if (command.equals("btnInstructionReceiver")) {
 			String instruction
 					= receiver.getInstruction();
@@ -314,7 +321,7 @@ public class MainController implements ActionListener {
 				fileNames = new ArrayList<>();
 				ListFolderResult list = client.files().listFolderBuilder(path).start();
 				for (Metadata d : list.getEntries()) {
-					if (d.getName().equals(code+"_SENDER_OK.txt")) {
+					if (d.getName().equals(code + "_SENDER_OK.txt")) {
 						continue;
 					}
 					fileNames.add(d.getName());
@@ -343,7 +350,7 @@ public class MainController implements ActionListener {
 			}
 
 			try {
-				if(fileNames.size()==0) {
+				if (fileNames.size() == 0) {
 					JOptionPane.showMessageDialog(receiver, "Download list is Empty !", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
@@ -365,7 +372,7 @@ public class MainController implements ActionListener {
 			JOptionPane.showMessageDialog(receiver, "Files Downloaded Successfully !", "Info", JOptionPane.INFORMATION_MESSAGE);
 
 		} else if (command.equals("btnReset")) {
-			if (role) {
+			if (role==true) {
 				if (code != -1) {
 					try {
 						client.files().deleteV2("/" + code);
@@ -381,11 +388,11 @@ public class MainController implements ActionListener {
 				files = new ArrayList<File>();
 			} else {
 				txtCode.setText("");
+				txtCode.setEnabled(true);
 				btnConfirm.setEnabled(true);
 				if (fileNames != null) {
 					fileNames.clear();
 				}
-				txtCode.setEnabled(true);
 			}
 			lbStatus.setForeground(Color.black);
 			lbStatus.setText("Status : none");
